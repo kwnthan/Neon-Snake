@@ -130,6 +130,8 @@ canvas{
     font-weight:900;
     cursor:pointer;
     user-select:none;
+    -webkit-user-select:none;
+    touch-action:none;
 }
 
 #startBtn{
@@ -237,9 +239,7 @@ canvas{
         opacity:0;
         transform:translate(-50%,-30%) scale(.6);
     }
-    20%,80%{
-        opacity:1;
-    }
+    20%,80%{opacity:1}
     100%{
         opacity:0;
         transform:translate(-50%,-120%) scale(1.2);
@@ -343,37 +343,6 @@ canvas{
     color:#fff!important;
     box-shadow:0 0 12px #ff007f!important;
 }
-
-@media(max-height:700px){
-
-    .neonTitle{
-        font-size:34px;
-        margin-bottom:4px;
-    }
-
-    .infoBox{
-        font-size:16px;
-    }
-
-    .controls{
-        margin-top:5px;
-    }
-
-    .dir{
-        width:52px;
-        height:52px;
-    }
-
-    .controls{
-        grid-template-columns:52px 52px 52px;
-        grid-template-rows:52px 52px 52px;
-        gap:7px;
-    }
-
-    .buttons{
-        margin:5px 0;
-    }
-}
 </style>
 </head>
 
@@ -418,17 +387,11 @@ LEVEL <span id="level">1</span>
 
 <div class="buttons">
 
-<button class="mainBtn" id="startBtn">
-START
-</button>
+<button class="mainBtn" id="startBtn">START</button>
 
-<button class="mainBtn" id="reloadBtn">
-RELOAD
-</button>
+<button class="mainBtn" id="reloadBtn">RELOAD</button>
 
-<button class="mainBtn" id="turboBtn">
-TURBO OFF
-</button>
+<button class="mainBtn" id="turboBtn">TURBO OFF</button>
 
 </div>
 
@@ -444,8 +407,6 @@ TURBO OFF
 </div>
 
 
-<!-- NAME -->
-
 <div class="overlay" id="nameOverlay">
 
 <div class="modal">
@@ -460,16 +421,12 @@ maxlength="15"
 placeholder="NAME"
 autocomplete="off">
 
-<button id="nameOk">
-OK
-</button>
+<button id="nameOk">OK</button>
 
 </div>
 
 </div>
 
-
-<!-- TOP PLAYERS -->
 
 <div class="overlay hidden" id="playersOverlay">
 
@@ -490,36 +447,47 @@ CLOSE
 
 <script>
 
+"use strict";
+
+/* =========================
+   ELEMENTS
+========================= */
+
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
-
-const grid=20;
-const cols=20;
-const rows=20;
 
 const scoreEl=document.getElementById("score");
 const bestEl=document.getElementById("best");
 const levelEl=document.getElementById("level");
 const playerNameEl=document.getElementById("playerName");
+
 const startBtn=document.getElementById("startBtn");
 const reloadBtn=document.getElementById("reloadBtn");
 const turboBtn=document.getElementById("turboBtn");
+
 const nameOverlay=document.getElementById("nameOverlay");
 const nameInput=document.getElementById("nameInput");
 const nameOk=document.getElementById("nameOk");
+
 const playersOverlay=document.getElementById("playersOverlay");
+const playersList=document.getElementById("playersList");
 const topInline=document.getElementById("topInline");
 const closePlayers=document.getElementById("closePlayers");
-const playersList=document.getElementById("playersList");
+
 const message=document.getElementById("message");
 
+
+/* =========================
+   GAME SETTINGS
+========================= */
+
+const grid=20;
+const cols=20;
+const rows=20;
+
 let playerName="";
-
 let score=0;
-
-let best=Number(
-localStorage.getItem("snake_best")||0
-);
+let best=Number(localStorage.getItem("snake_best")||0);
 
 let level=1;
 let applesEaten=0;
@@ -537,6 +505,7 @@ let turboInterval=42;
 let lastTime=0;
 
 let snakeColor="#00f2fe";
+let bgIndex=0;
 
 const backgroundColors=[
 "#05021a",
@@ -549,66 +518,30 @@ const backgroundColors=[
 "#190617"
 ];
 
-let bgIndex=0;
-
 const snake={
-
 x:200,
 y:200,
-
 dx:grid,
 dy:0,
-
-cells:[
-{x:200,y:200},
-{x:180,y:200},
-{x:160,y:200},
-{x:140,y:200}
-],
-
+cells:[],
 maxCells:4
-
 };
 
 let foods=[];
 
+
+/* =========================
+   FOOD
+========================= */
+
 const foodTypes={
-
-apple:{
-color:"#ff007f",
-points:10
-},
-
-strawberry:{
-color:"#ff1744",
-points:25
-},
-
-cherry:{
-color:"#ff0033",
-points:35
-},
-
-orange:{
-color:"#ff8c00",
-points:20
-},
-
-watermelon:{
-color:"#00ff66",
-points:30
-},
-
-grape:{
-color:"#9b30ff",
-points:50
-},
-
-bomb:{
-color:"#111",
-points:-30
-}
-
+apple:{color:"#ff007f",points:10},
+strawberry:{color:"#ff1744",points:25},
+cherry:{color:"#ff0033",points:35},
+orange:{color:"#ff8c00",points:20},
+watermelon:{color:"#00ff66",points:30},
+grape:{color:"#9b30ff",points:50},
+bomb:{color:"#111",points:-30}
 };
 
 
@@ -620,323 +553,188 @@ let audioCtx=null;
 
 function initAudio(){
 
-try{
+    if(!audioCtx){
+        audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    }
 
-if(!audioCtx){
-
-audioCtx=new(
-window.AudioContext||
-window.webkitAudioContext
-)();
-
-}
-
-if(audioCtx.state==="suspended"){
-audioCtx.resume();
-}
-
-}catch(e){}
-
+    if(audioCtx.state==="suspended"){
+        audioCtx.resume();
+    }
 }
 
 function beep(f,d,type="sine"){
 
-if(!audioCtx)return;
+    if(!audioCtx)return;
 
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
 
-osc.type=type;
-osc.frequency.value=f;
+    osc.type=type;
+    osc.frequency.value=f;
 
-gain.gain.setValueAtTime(
-0.08,
-audioCtx.currentTime
-);
+    gain.gain.setValueAtTime(.08,audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioCtx.currentTime+d
+    );
 
-gain.gain.exponentialRampToValueAtTime(
-0.001,
-audioCtx.currentTime+d
-);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-
-osc.start();
-osc.stop(audioCtx.currentTime+d);
-
+    osc.start();
+    osc.stop(audioCtx.currentTime+d);
 }
 
 function eatSound(){
 
-beep(600,.08,"square");
+    beep(600,.08,"square");
 
-setTimeout(
-()=>beep(900,.08,"square"),
-70
-);
-
+    setTimeout(()=>{
+        beep(900,.08,"square");
+    },70);
 }
 
 function bonusSound(){
 
-beep(500,.08);
+    beep(500,.08);
 
-setTimeout(
-()=>beep(800,.08),
-80
-);
+    setTimeout(()=>{
+        beep(800,.08);
+    },80);
 
-setTimeout(
-()=>beep(1200,.12),
-160
-);
-
+    setTimeout(()=>{
+        beep(1200,.12);
+    },160);
 }
 
 function bombSound(){
 
-beep(120,.25,"sawtooth");
+    beep(120,.25,"sawtooth");
 
-setTimeout(
-()=>beep(70,.35,"sawtooth"),
-100
-);
-
+    setTimeout(()=>{
+        beep(70,.35,"sawtooth");
+    },100);
 }
 
 function gameOverSound(){
 
-beep(400,.15,"sawtooth");
+    beep(400,.15,"sawtooth");
 
-setTimeout(
-()=>beep(280,.18,"sawtooth"),
-150
-);
+    setTimeout(()=>{
+        beep(280,.18,"sawtooth");
+    },150);
 
-setTimeout(
-()=>beep(160,.25,"sawtooth"),
-350
-);
-
+    setTimeout(()=>{
+        beep(160,.25,"sawtooth");
+    },350);
 }
 
 
 /* =========================
-   FOOD
+   POSITION / FOOD
 ========================= */
 
 function randomPosition(){
 
-return{
-
-x:Math.floor(Math.random()*cols)*grid,
-
-y:Math.floor(Math.random()*rows)*grid
-
-};
-
+    return {
+        x:Math.floor(Math.random()*cols)*grid,
+        y:Math.floor(Math.random()*rows)*grid
+    };
 }
 
 function occupied(x,y){
 
-return snake.cells.some(
-c=>c.x===x&&c.y===y
-);
-
+    return snake.cells.some(c=>c.x===x&&c.y===y);
 }
 
 function createFood(type){
 
-let p;
-let tries=0;
+    let p;
+    let tries=0;
 
-do{
+    do{
+        p=randomPosition();
+        tries++;
+    }while(occupied(p.x,p.y)&&tries<100);
 
-p=randomPosition();
-tries++;
-
-}
-while(
-occupied(p.x,p.y)&&
-tries<100
-);
-
-foods.push({
-type:type,
-x:p.x,
-y:p.y
-});
-
+    foods.push({
+        type:type,
+        x:p.x,
+        y:p.y
+    });
 }
 
 function resetFoods(){
 
-foods=[];
-
-createFood("apple");
-
+    foods=[];
+    createFood("apple");
 }
 
 function specialFood(){
 
-const r=Math.random();
+    const r=Math.random();
 
-if(r<.18){
-
-createFood("strawberry");
-
-}
-else if(r<.33){
-
-createFood("cherry");
-
-}
-else if(r<.47){
-
-createFood("orange");
-
-}
-else if(r<.60){
-
-createFood("watermelon");
-
-}
-else if(r<.72){
-
-createFood("grape");
-
-}
-else if(
-snake.cells.length>=10 &&
-r<.84
-){
-
-createFood("bomb");
-
-}
-
+    if(r<.18)
+        createFood("strawberry");
+    else if(r<.33)
+        createFood("cherry");
+    else if(r<.47)
+        createFood("orange");
+    else if(r<.60)
+        createFood("watermelon");
+    else if(r<.72)
+        createFood("grape");
+    else if(snake.cells.length>=10&&r<.84)
+        createFood("bomb");
 }
 
 
 /* =========================
-   RESET SNAKE
-========================= */
-
-function resetSnake(){
-
-snake.x=200;
-snake.y=200;
-
-snake.dx=grid;
-snake.dy=0;
-
-snake.maxCells=4;
-
-snake.cells=[
-{x:200,y:200},
-{x:180,y:200},
-{x:160,y:200},
-{x:140,y:200}
-];
-
-}
-
-
-/* =========================
-   RESET GAME
+   RESET
 ========================= */
 
 function resetGame(){
 
-score=0;
-level=1;
-applesEaten=0;
+    score=0;
+    level=1;
+    applesEaten=0;
 
-gameStarted=true;
-gameOver=false;
-paused=false;
+    gameOver=false;
+    paused=false;
+    gameStarted=true;
 
-turboActive=false;
+    turboActive=false;
 
-normalInterval=115;
-turboInterval=42;
+    normalInterval=115;
+    turboInterval=42;
 
-snakeColor="#00f2fe";
-bgIndex=0;
+    snakeColor="#00f2fe";
+    bgIndex=0;
 
-resetSnake();
-resetFoods();
+    snake.x=200;
+    snake.y=200;
+    snake.dx=grid;
+    snake.dy=0;
 
-scoreEl.textContent="0";
-levelEl.textContent="1";
+    snake.maxCells=4;
 
-startBtn.textContent="PAUSE";
+    snake.cells=[
+        {x:200,y:200},
+        {x:180,y:200},
+        {x:160,y:200},
+        {x:140,y:200}
+    ];
 
-draw();
+    scoreEl.textContent="0";
+    levelEl.textContent="1";
 
-}
+    resetFoods();
 
+    startBtn.textContent="PAUSE";
 
-/* =========================
-   RELOAD
-========================= */
+    lastTime=performance.now();
 
-/*
-   ΣΗΜΑΝΤΙΚΟ:
-   Δεν χρησιμοποιούμε location.reload().
-   Κάνει εσωτερικό reset ώστε να δουλεύει
-   σωστά και μέσα σε Android WebView.
-*/
-
-function reloadGame(){
-
-gameStarted=false;
-gameOver=false;
-paused=false;
-
-turboActive=false;
-
-score=0;
-level=1;
-applesEaten=0;
-
-normalInterval=115;
-turboInterval=42;
-
-snakeColor="#00f2fe";
-bgIndex=0;
-
-resetSnake();
-resetFoods();
-
-scoreEl.textContent="0";
-levelEl.textContent="1";
-
-startBtn.textContent="START";
-
-message.classList.remove(
-"messageShow"
-);
-
-playerName="";
-playerNameEl.textContent="---";
-
-nameInput.value="";
-
-draw();
-
-nameOverlay.classList.remove(
-"hidden"
-);
-
-setTimeout(
-()=>{
-nameInput.focus();
-},
-200
-);
-
+    draw();
 }
 
 
@@ -946,240 +744,132 @@ nameInput.focus();
 
 function drawFood(food){
 
-const f=foodTypes[food.type];
+    const f=foodTypes[food.type];
 
-ctx.save();
+    ctx.save();
 
-ctx.shadowBlur=15;
-ctx.shadowColor=f.color;
+    ctx.shadowBlur=15;
+    ctx.shadowColor=f.color;
 
+    if(food.type==="apple"){
 
-if(food.type==="apple"){
+        ctx.fillStyle=f.color;
 
-ctx.fillStyle=f.color;
+        ctx.beginPath();
+        ctx.arc(food.x+10,food.y+11,7,0,Math.PI*2);
+        ctx.fill();
 
-ctx.beginPath();
+        ctx.fillStyle="#35ff35";
+        ctx.fillRect(food.x+10,food.y+1,4,7);
 
-ctx.arc(
-food.x+10,
-food.y+11,
-7,
-0,
-Math.PI*2
-);
+    }
 
-ctx.fill();
+    else if(food.type==="strawberry"){
 
-ctx.fillStyle="#35ff35";
+        ctx.fillStyle=f.color;
 
-ctx.fillRect(
-food.x+10,
-food.y+1,
-4,
-7
-);
+        ctx.beginPath();
+        ctx.moveTo(food.x+2,food.y+5);
+        ctx.lineTo(food.x+18,food.y+5);
+        ctx.lineTo(food.x+10,food.y+19);
+        ctx.closePath();
+        ctx.fill();
 
-}
+        ctx.fillStyle="#00ff66";
+        ctx.fillRect(food.x+6,food.y,8,5);
+    }
 
+    else if(food.type==="cherry"){
 
-else if(food.type==="strawberry"){
+        ctx.fillStyle=f.color;
 
-ctx.fillStyle=f.color;
+        ctx.beginPath();
+        ctx.arc(food.x+6,food.y+12,6,0,Math.PI*2);
+        ctx.arc(food.x+15,food.y+12,6,0,Math.PI*2);
+        ctx.fill();
 
-ctx.beginPath();
+        ctx.strokeStyle="#00ff66";
+        ctx.lineWidth=2;
 
-ctx.moveTo(food.x+2,food.y+5);
-ctx.lineTo(food.x+18,food.y+5);
-ctx.lineTo(food.x+10,food.y+19);
-ctx.closePath();
+        ctx.beginPath();
+        ctx.moveTo(food.x+8,food.y+7);
+        ctx.lineTo(food.x+11,food.y);
+        ctx.lineTo(food.x+16,food.y+7);
+        ctx.stroke();
+    }
 
-ctx.fill();
+    else if(food.type==="orange"){
 
-ctx.fillStyle="#00ff66";
+        ctx.fillStyle=f.color;
 
-ctx.fillRect(
-food.x+6,
-food.y,
-8,
-5
-);
+        ctx.beginPath();
+        ctx.arc(food.x+10,food.y+10,8,0,Math.PI*2);
+        ctx.fill();
+    }
 
-}
+    else if(food.type==="watermelon"){
 
+        ctx.fillStyle="#00cc55";
 
-else if(food.type==="cherry"){
+        ctx.beginPath();
+        ctx.arc(food.x+10,food.y+10,9,0,Math.PI*2);
+        ctx.fill();
 
-ctx.fillStyle=f.color;
+        ctx.fillStyle="#ff3355";
 
-ctx.beginPath();
+        ctx.beginPath();
+        ctx.arc(food.x+10,food.y+10,6,0,Math.PI*2);
+        ctx.fill();
 
-ctx.arc(
-food.x+6,
-food.y+12,
-6,
-0,
-Math.PI*2
-);
+        ctx.fillStyle="#111";
 
-ctx.arc(
-food.x+15,
-food.y+12,
-6,
-0,
-Math.PI*2
-);
+        for(let i=0;i<3;i++){
+            ctx.fillRect(food.x+6+i*4,food.y+7,2,2);
+        }
+    }
 
-ctx.fill();
+    else if(food.type==="grape"){
 
-ctx.strokeStyle="#00ff66";
-ctx.lineWidth=2;
+        ctx.fillStyle=f.color;
 
-ctx.beginPath();
+        [
+            [5,5],[12,5],
+            [2,11],[9,11],[16,11],
+            [6,17],[13,17]
+        ].forEach(p=>{
 
-ctx.moveTo(food.x+8,food.y+7);
-ctx.lineTo(food.x+11,food.y);
-ctx.lineTo(food.x+16,food.y+7);
+            ctx.beginPath();
+            ctx.arc(
+                food.x+p[0],
+                food.y+p[1],
+                4,
+                0,
+                Math.PI*2
+            );
+            ctx.fill();
+        });
+    }
 
-ctx.stroke();
+    else if(food.type==="bomb"){
 
-}
+        ctx.fillStyle="#111";
 
+        ctx.beginPath();
+        ctx.arc(food.x+10,food.y+11,8,0,Math.PI*2);
+        ctx.fill();
 
-else if(food.type==="orange"){
+        ctx.strokeStyle="#ff007f";
+        ctx.lineWidth=2;
+        ctx.stroke();
 
-ctx.fillStyle=f.color;
+        ctx.fillStyle="#ff8c00";
 
-ctx.beginPath();
+        ctx.beginPath();
+        ctx.arc(food.x+14,food.y+2,3,0,Math.PI*2);
+        ctx.fill();
+    }
 
-ctx.arc(
-food.x+10,
-food.y+10,
-8,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-}
-
-
-else if(food.type==="watermelon"){
-
-ctx.fillStyle="#00cc55";
-
-ctx.beginPath();
-
-ctx.arc(
-food.x+10,
-food.y+10,
-9,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-ctx.fillStyle="#ff3355";
-
-ctx.beginPath();
-
-ctx.arc(
-food.x+10,
-food.y+10,
-6,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-ctx.fillStyle="#111";
-
-for(let i=0;i<3;i++){
-
-ctx.fillRect(
-food.x+6+i*4,
-food.y+7,
-2,
-2
-);
-
-}
-
-}
-
-
-else if(food.type==="grape"){
-
-ctx.fillStyle=f.color;
-
-[
-[5,5],
-[12,5],
-[2,11],
-[9,11],
-[16,11],
-[6,17],
-[13,17]
-].forEach(p=>{
-
-ctx.beginPath();
-
-ctx.arc(
-food.x+p[0],
-food.y+p[1],
-4,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-});
-
-}
-
-
-else if(food.type==="bomb"){
-
-ctx.fillStyle="#111";
-
-ctx.beginPath();
-
-ctx.arc(
-food.x+10,
-food.y+11,
-8,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-ctx.strokeStyle="#ff007f";
-ctx.lineWidth=2;
-
-ctx.stroke();
-
-ctx.fillStyle="#ff8c00";
-
-ctx.beginPath();
-
-ctx.arc(
-food.x+14,
-food.y+2,
-3,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-}
-
-ctx.restore();
-
+    ctx.restore();
 }
 
 
@@ -1189,173 +879,113 @@ ctx.restore();
 
 function drawSnake(){
 
-snake.cells.forEach(
-(cell,index)=>{
+    snake.cells.forEach((cell,index)=>{
 
-ctx.save();
+        ctx.save();
 
-const color=
-index===0
-?"#ffff00"
-:snakeColor;
+        const color=index===0?"#ffff00":snakeColor;
 
-ctx.fillStyle=color;
+        ctx.fillStyle=color;
+        ctx.shadowBlur=15;
+        ctx.shadowColor=color;
 
-ctx.shadowBlur=15;
-ctx.shadowColor=color;
+        ctx.fillRect(
+            cell.x+2,
+            cell.y+2,
+            grid-4,
+            grid-4
+        );
 
-ctx.fillRect(
-cell.x+2,
-cell.y+2,
-grid-4,
-grid-4
-);
+        if(index===0){
 
+            ctx.shadowBlur=0;
+            ctx.fillStyle="#000";
 
-if(index===0){
+            let eye1;
+            let eye2;
 
-ctx.shadowBlur=0;
+            if(snake.dx>0){
 
-ctx.fillStyle="#000";
+                eye1={x:cell.x+14,y:cell.y+5};
+                eye2={x:cell.x+14,y:cell.y+13};
 
-let eye1;
-let eye2;
+            }else if(snake.dx<0){
 
-if(snake.dx>0){
+                eye1={x:cell.x+6,y:cell.y+5};
+                eye2={x:cell.x+6,y:cell.y+13};
 
-eye1={
-x:cell.x+14,
-y:cell.y+5
-};
+            }else if(snake.dy<0){
 
-eye2={
-x:cell.x+14,
-y:cell.y+13
-};
+                eye1={x:cell.x+5,y:cell.y+6};
+                eye2={x:cell.x+13,y:cell.y+6};
 
-}
-else if(snake.dx<0){
+            }else{
 
-eye1={
-x:cell.x+6,
-y:cell.y+5
-};
+                eye1={x:cell.x+5,y:cell.y+14};
+                eye2={x:cell.x+13,y:cell.y+14};
+            }
 
-eye2={
-x:cell.x+6,
-y:cell.y+13
-};
+            ctx.beginPath();
 
-}
-else if(snake.dy<0){
+            ctx.arc(
+                eye1.x,
+                eye1.y,
+                2,
+                0,
+                Math.PI*2
+            );
 
-eye1={
-x:cell.x+5,
-y:cell.y+6
-};
+            ctx.arc(
+                eye2.x,
+                eye2.y,
+                2,
+                0,
+                Math.PI*2
+            );
 
-eye2={
-x:cell.x+13,
-y:cell.y+6
-};
+            ctx.fill();
+        }
 
-}
-else{
-
-eye1={
-x:cell.x+5,
-y:cell.y+14
-};
-
-eye2={
-x:cell.x+13,
-y:cell.y+14
-};
-
-}
-
-ctx.beginPath();
-
-ctx.arc(
-eye1.x,
-eye1.y,
-2,
-0,
-Math.PI*2
-);
-
-ctx.arc(
-eye2.x,
-eye2.y,
-2,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-}
-
-ctx.restore();
-
-});
-
+        ctx.restore();
+    });
 }
 
 
 /* =========================
-   DRAW BOARD
+   DRAW
 ========================= */
 
 function draw(){
 
-ctx.fillStyle=
-backgroundColors[bgIndex];
+    ctx.fillStyle=backgroundColors[bgIndex];
 
-ctx.fillRect(
-0,
-0,
-canvas.width,
-canvas.height
-);
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
-ctx.strokeStyle=
-"rgba(0,242,254,.07)";
+    ctx.strokeStyle="rgba(0,242,254,.07)";
 
-for(
-let x=0;
-x<canvas.width;
-x+=grid
-){
+    for(let x=0;x<canvas.width;x+=grid){
 
-ctx.beginPath();
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+    }
 
-ctx.moveTo(x,0);
-ctx.lineTo(x,canvas.height);
+    for(let y=0;y<canvas.height;y+=grid){
 
-ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+    }
 
-}
-
-for(
-let y=0;
-y<canvas.height;
-y+=grid
-){
-
-ctx.beginPath();
-
-ctx.moveTo(0,y);
-ctx.lineTo(canvas.width,y);
-
-ctx.stroke();
-
-}
-
-foods.forEach(drawFood);
-
-drawSnake();
-
+    foods.forEach(drawFood);
+    drawSnake();
 }
 
 
@@ -1365,26 +995,24 @@ drawSnake();
 
 function addScore(points){
 
-score+=points;
+    score+=points;
 
-if(score<0)
-score=0;
+    if(score<0)
+        score=0;
 
-scoreEl.textContent=score;
+    scoreEl.textContent=score;
 
-if(score>best){
+    if(score>best){
 
-best=score;
+        best=score;
 
-bestEl.textContent=best;
+        bestEl.textContent=best;
 
-localStorage.setItem(
-"snake_best",
-best
-);
-
-}
-
+        localStorage.setItem(
+            "snake_best",
+            String(best)
+        );
+    }
 }
 
 
@@ -1394,40 +1022,31 @@ best
 
 function updateLevel(){
 
-const newLevel=
-Math.floor(score/100)+1;
+    const newLevel=Math.floor(score/100)+1;
 
-if(newLevel!==level){
+    if(newLevel!==level){
 
-level=newLevel;
+        level=newLevel;
 
-bgIndex=
-(level-1)%backgroundColors.length;
+        bgIndex=(level-1)%backgroundColors.length;
 
-const colors=[
-"#00f2fe",
-"#00ff99",
-"#ff66ff",
-"#00aaff",
-"#ff9900",
-"#ff00aa",
-"#66ff00",
-"#00ffff"
-];
+        const colors=[
+            "#00f2fe",
+            "#00ff99",
+            "#ff66ff",
+            "#00aaff",
+            "#ff9900",
+            "#ff00aa",
+            "#66ff00",
+            "#00ffff"
+        ];
 
-snakeColor=
-colors[
-(level-1)%colors.length
-];
+        snakeColor=colors[(level-1)%colors.length];
 
-showMessage(
-"LEVEL "+level
-);
+        showMessage("LEVEL "+level);
+    }
 
-}
-
-levelEl.textContent=level;
-
+    levelEl.textContent=level;
 }
 
 
@@ -1437,58 +1056,121 @@ levelEl.textContent=level;
 
 function showMessage(text){
 
-message.textContent=text;
+    message.textContent=text;
 
-message.classList.remove(
-"messageShow"
-);
+    message.classList.remove("messageShow");
 
-void message.offsetWidth;
+    void message.offsetWidth;
 
-message.classList.add(
-"messageShow"
-);
-
+    message.classList.add("messageShow");
 }
 
 
 /* =========================
-   SAVE TOP PLAYERS
+   TOP PLAYERS
 ========================= */
 
 function savePlayer(){
 
-if(!playerName)
-return;
+    if(!playerName)return;
 
-let players=
-JSON.parse(
-localStorage.getItem(
-"snake_players"
-)||"[]"
-);
+    let players=[];
 
-players.push({
+    try{
+        players=JSON.parse(
+            localStorage.getItem("snake_players")||"[]"
+        );
+    }catch(e){
+        players=[];
+    }
 
-name:playerName,
-score:score,
-level:level,
-date:Date.now()
+    players.push({
+        name:playerName,
+        score:score,
+        level:level,
+        date:Date.now()
+    });
 
-});
+    players.sort((a,b)=>{
 
-players.sort(
-(a,b)=>b.score-a.score
-);
+        if(b.score!==a.score)
+            return b.score-a.score;
 
-players=
-players.slice(0,20);
+        return b.level-a.level;
+    });
 
-localStorage.setItem(
-"snake_players",
-JSON.stringify(players)
-);
+    players=players.slice(0,20);
 
+    localStorage.setItem(
+        "snake_players",
+        JSON.stringify(players)
+    );
+}
+
+function showPlayers(){
+
+    let players=[];
+
+    try{
+        players=JSON.parse(
+            localStorage.getItem("snake_players")||"[]"
+        );
+    }catch(e){
+        players=[];
+    }
+
+    if(players.length===0){
+
+        playersList.innerHTML=
+            "<p>Δεν υπάρχουν ακόμα παίκτες.</p>";
+
+    }else{
+
+        let html=`
+
+        <div class="playerHeader">
+            <div>#</div>
+            <div>NAME</div>
+            <div>SCORE</div>
+            <div>LEVEL</div>
+        </div>
+        `;
+
+        players.forEach((p,i)=>{
+
+            html+=`
+
+            <div class="playerRow">
+
+                <div>${i+1}</div>
+
+                <div>
+                    <strong>${escapeHtml(p.name)}</strong>
+                </div>
+
+                <div>${p.score}</div>
+
+                <div>${p.level}</div>
+
+            </div>
+
+            `;
+        });
+
+        playersList.innerHTML=html;
+    }
+
+    playersOverlay.classList.remove("hidden");
+}
+
+function escapeHtml(text){
+
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
 }
 
 
@@ -1498,123 +1180,107 @@ JSON.stringify(players)
 
 function drawGameOver(){
 
-draw();
+    draw();
 
-ctx.save();
+    ctx.save();
 
-ctx.fillStyle=
-"rgba(2,0,12,.90)";
+    ctx.fillStyle="rgba(2,0,12,.90)";
 
-ctx.fillRect(
-0,
-0,
-canvas.width,
-canvas.height
-);
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
-ctx.textAlign="center";
+    ctx.textAlign="center";
 
+    ctx.font="900 46px Arial Black,Segoe UI,sans-serif";
 
-/* ΜΕΓΑΛΑ ΝΕΟΝ ΓΡΑΜΜΑΤΑ */
+    ctx.fillStyle="#fff";
 
-ctx.font=
-"900 46px Arial Black,Segoe UI,sans-serif";
+    ctx.shadowColor="#ff007f";
+    ctx.shadowBlur=15;
 
-ctx.fillStyle="#fff";
+    ctx.fillText(
+        "GAME OVER",
+        canvas.width/2,
+        canvas.height/2-55
+    );
 
-ctx.shadowColor="#ff007f";
-ctx.shadowBlur=15;
+    ctx.strokeStyle="#ff007f";
+    ctx.lineWidth=2;
 
-ctx.fillText(
-"GAME OVER",
-canvas.width/2,
-canvas.height/2-55
-);
+    ctx.shadowBlur=30;
 
-ctx.strokeStyle="#ff007f";
-ctx.lineWidth=2;
+    ctx.strokeText(
+        "GAME OVER",
+        canvas.width/2,
+        canvas.height/2-55
+    );
 
-ctx.shadowBlur=30;
+    ctx.font="900 28px Segoe UI";
 
-ctx.strokeText(
-"GAME OVER",
-canvas.width/2,
-canvas.height/2-55
-);
+    ctx.fillStyle="#00f2fe";
 
+    ctx.shadowColor="#00f2fe";
+    ctx.shadowBlur=18;
 
-/* SCORE */
+    ctx.fillText(
+        "SCORE: "+score,
+        canvas.width/2,
+        canvas.height/2+5
+    );
 
-ctx.font=
-"900 28px Segoe UI";
+    ctx.font="900 24px Segoe UI";
 
-ctx.fillStyle="#00f2fe";
+    ctx.fillStyle="#ffff00";
 
-ctx.shadowColor="#00f2fe";
-ctx.shadowBlur=18;
+    ctx.shadowColor="#ffff00";
+    ctx.shadowBlur=18;
 
-ctx.fillText(
-"SCORE: "+score,
-canvas.width/2,
-canvas.height/2+5
-);
+    ctx.fillText(
+        "LEVEL: "+level,
+        canvas.width/2,
+        canvas.height/2+42
+    );
 
+    ctx.font="900 20px Segoe UI";
 
-/* LEVEL */
+    ctx.fillStyle="#ff66cc";
 
-ctx.font=
-"900 24px Segoe UI";
+    ctx.shadowColor="#ff007f";
 
-ctx.fillStyle="#ffff00";
+    ctx.fillText(
+        playerName,
+        canvas.width/2,
+        canvas.height/2+78
+    );
 
-ctx.shadowColor="#ffff00";
-ctx.shadowBlur=18;
-
-ctx.fillText(
-"LEVEL: "+level,
-canvas.width/2,
-canvas.height/2+42
-);
-
-
-/* NAME */
-
-ctx.font=
-"900 20px Segoe UI";
-
-ctx.fillStyle="#ff66cc";
-
-ctx.shadowColor="#ff007f";
-
-ctx.fillText(
-playerName,
-canvas.width/2,
-canvas.height/2+78
-);
-
-ctx.restore();
-
+    ctx.restore();
 }
 
 
+/* =========================
+   END GAME
+========================= */
+
 function endGame(){
 
-if(gameOver)
-return;
+    if(gameOver)return;
 
-gameOver=true;
-gameStarted=false;
-paused=false;
-turboActive=false;
+    gameOver=true;
+    gameStarted=false;
+    paused=false;
+    turboActive=false;
 
-gameOverSound();
+    gameOverSound();
 
-savePlayer();
+    savePlayer();
 
-startBtn.textContent="RESTART";
+    startBtn.textContent="RESTART";
 
-drawGameOver();
-
+    drawGameOver();
 }
 
 
@@ -1624,119 +1290,526 @@ drawGameOver();
 
 function step(){
 
-if(
-!gameStarted||
-paused||
-gameOver
-)
-return;
+    if(!gameStarted||paused||gameOver)
+        return;
+
+    snake.x+=snake.dx;
+    snake.y+=snake.dy;
+
+    if(snake.x<0)
+        snake.x=canvas.width-grid;
+    else if(snake.x>=canvas.width)
+        snake.x=0;
+
+    if(snake.y<0)
+        snake.y=canvas.height-grid;
+    else if(snake.y>=canvas.height)
+        snake.y=0;
+
+    snake.cells.unshift({
+        x:snake.x,
+        y:snake.y
+    });
+
+    if(snake.cells.length>snake.maxCells)
+        snake.cells.pop();
 
 
-snake.x+=snake.dx;
-snake.y+=snake.dy;
+    /* COLLISION */
+
+    for(let i=1;i<snake.cells.length;i++){
+
+        if(
+            snake.x===snake.cells[i].x &&
+            snake.y===snake.cells[i].y
+        ){
+
+            endGame();
+            return;
+        }
+    }
 
 
-/* WALL WRAP */
+    /* FOOD */
 
-if(snake.x<0)
-snake.x=canvas.width-grid;
+    for(let i=foods.length-1;i>=0;i--){
 
-else if(snake.x>=canvas.width)
-snake.x=0;
+        const food=foods[i];
 
+        if(
+            snake.x===food.x &&
+            snake.y===food.y
+        ){
 
-if(snake.y<0)
-snake.y=canvas.height-grid;
-
-else if(snake.y>=canvas.height)
-snake.y=0;
+            foods.splice(i,1);
 
 
-snake.cells.unshift({
-x:snake.x,
-y:snake.y
+            /* BOMB */
+
+            if(food.type==="bomb"){
+
+                bombSound();
+
+                score=Math.max(0,score-30);
+
+                scoreEl.textContent=score;
+
+                snake.maxCells=Math.max(
+                    4,
+                    snake.maxCells-3
+                );
+
+                while(
+                    snake.cells.length>snake.maxCells
+                ){
+                    snake.cells.pop();
+                }
+
+                document.body.classList.remove("shake");
+
+                void document.body.offsetWidth;
+
+                document.body.classList.add("shake");
+
+                showMessage("💣 BOOM! -30");
+
+            }
+
+
+            /* FRUIT */
+
+            else{
+
+                const points=foodTypes[food.type].points;
+
+                addScore(points);
+
+                snake.maxCells++;
+
+                if(food.type==="apple"){
+
+                    applesEaten++;
+
+                    eatSound();
+
+                    showMessage("🍎 +"+points);
+
+                }else{
+
+                    bonusSound();
+
+                    let text=food.type.toUpperCase();
+
+                    if(food.type==="grape"){
+
+                        text="🍇 ΜΕΓΑΛΩΣΕ! +"+points;
+                    }
+
+                    showMessage(text);
+                }
+
+                updateLevel();
+
+
+                /* SPEED */
+
+                if(
+                    applesEaten>0 &&
+                    applesEaten%20===0
+                ){
+
+                    normalInterval=Math.max(
+                        35,
+                        normalInterval*.99
+                    );
+
+                    turboInterval=Math.max(
+                        18,
+                        turboInterval*.99
+                    );
+                }
+
+
+                /* SPECIAL */
+
+                if(
+                    food.type==="apple" &&
+                    applesEaten%5===0
+                ){
+
+                    specialFood();
+                }
+
+
+                /* NEW APPLE */
+
+                if(
+                    !foods.some(f=>f.type==="apple")
+                ){
+
+                    createFood("apple");
+                }
+            }
+
+            break;
+        }
+    }
+}
+
+
+/* =========================
+   GAME LOOP
+========================= */
+
+function gameLoop(time){
+
+    requestAnimationFrame(gameLoop);
+
+    if(!gameStarted||paused){
+
+        if(!gameOver)
+            draw();
+
+        return;
+    }
+
+    const interval=
+        turboEnabled&&turboActive
+        ?turboInterval
+        :normalInterval;
+
+    if(time-lastTime>=interval){
+
+        lastTime=time;
+
+        step();
+
+        if(!gameOver)
+            draw();
+    }
+}
+
+
+/* =========================
+   START BUTTON
+========================= */
+
+startBtn.addEventListener("click",()=>{
+
+    initAudio();
+
+    if(gameOver){
+
+        resetGame();
+
+        return;
+    }
+
+    if(!gameStarted){
+
+        resetGame();
+
+        return;
+    }
+
+    paused=!paused;
+
+    startBtn.textContent=
+        paused
+        ?"RESUME"
+        :"PAUSE";
 });
 
-if(
-snake.cells.length>
-snake.maxCells
-){
 
-snake.cells.pop();
+/* =========================
+   RELOAD BUTTON
+========================= */
 
+reloadBtn.addEventListener("click",()=>{
+
+    location.reload();
+});
+
+
+/* =========================
+   TURBO BUTTON
+========================= */
+
+turboBtn.addEventListener("click",()=>{
+
+    initAudio();
+
+    turboEnabled=!turboEnabled;
+
+    turboActive=false;
+
+    if(turboEnabled){
+
+        turboBtn.textContent="TURBO ON";
+
+        turboBtn.classList.add("on");
+
+        showMessage("⚡ TURBO ON");
+
+    }else{
+
+        turboBtn.textContent="TURBO OFF";
+
+        turboBtn.classList.remove("on");
+
+        showMessage("TURBO OFF");
+    }
+});
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+window.addEventListener("keydown",e=>{
+
+    const key=e.key;
+
+    const keys=[
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown"
+    ];
+
+    if(keys.includes(key)){
+        e.preventDefault();
+    }
+
+
+    /* TURBO ΜΕ ΠΑΡΑΤΕΤΑΜΕΝΟ ΠΑΤΗΜΑ */
+
+    if(
+        turboEnabled &&
+        keys.includes(key)
+    ){
+
+        turboActive=true;
+    }
+
+
+    if(!gameStarted||paused||gameOver)
+        return;
+
+
+    if(key==="ArrowLeft" && snake.dx===0){
+
+        snake.dx=-grid;
+        snake.dy=0;
+
+    }else if(key==="ArrowRight" && snake.dx===0){
+
+        snake.dx=grid;
+        snake.dy=0;
+
+    }else if(key==="ArrowUp" && snake.dy===0){
+
+        snake.dy=-grid;
+        snake.dx=0;
+
+    }else if(key==="ArrowDown" && snake.dy===0){
+
+        snake.dy=grid;
+        snake.dx=0;
+    }
+
+});
+
+
+window.addEventListener("keyup",e=>{
+
+    const keys=[
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown"
+    ];
+
+    if(keys.includes(e.key)){
+        turboActive=false;
+    }
+});
+
+
+/* =========================
+   TOUCH / DIRECTION
+========================= */
+
+function setDirection(direction){
+
+    initAudio();
+
+    if(!gameStarted||paused||gameOver)
+        return;
+
+    if(direction==="left" && snake.dx===0){
+
+        snake.dx=-grid;
+        snake.dy=0;
+
+    }else if(direction==="right" && snake.dx===0){
+
+        snake.dx=grid;
+        snake.dy=0;
+
+    }else if(direction==="up" && snake.dy===0){
+
+        snake.dy=-grid;
+        snake.dx=0;
+
+    }else if(direction==="down" && snake.dy===0){
+
+        snake.dy=grid;
+        snake.dx=0;
+    }
 }
 
 
-/* SELF COLLISION */
+function setupDirectionButton(id,direction){
 
-for(
-let i=1;
-i<snake.cells.length;
-i++
-){
+    const button=document.getElementById(id);
 
-if(
-snake.x===snake.cells[i].x &&
-snake.y===snake.cells[i].y
-){
+    let timer=null;
 
-endGame();
+    function press(){
 
-return;
+        setDirection(direction);
 
+        if(turboEnabled){
+
+            turboActive=true;
+
+            timer=setInterval(()=>{
+
+                if(turboEnabled)
+                    turboActive=true;
+
+            },50);
+        }
+    }
+
+    function release(){
+
+        if(timer){
+
+            clearInterval(timer);
+            timer=null;
+        }
+
+        turboActive=false;
+    }
+
+    button.addEventListener("pointerdown",e=>{
+
+        e.preventDefault();
+        press();
+    });
+
+    button.addEventListener("pointerup",e=>{
+
+        e.preventDefault();
+        release();
+    });
+
+    button.addEventListener("pointercancel",release);
+    button.addEventListener("pointerleave",release);
 }
 
-}
+
+setupDirectionButton("up","up");
+setupDirectionButton("left","left");
+setupDirectionButton("right","right");
+setupDirectionButton("down","down");
 
 
-/* FOOD */
+/* =========================
+   NAME
+========================= */
 
-for(
-let i=foods.length-1;
-i>=0;
-i--
-){
+nameOk.addEventListener("click",()=>{
 
-const food=foods[i];
+    const value=nameInput.value.trim();
 
-if(
-snake.x===food.x &&
-snake.y===food.y
-){
+    if(!value){
 
-foods.splice(i,1);
+        nameInput.focus();
+
+        return;
+    }
+
+    playerName=value;
+
+    playerNameEl.textContent=playerName;
+
+    nameOverlay.classList.add("hidden");
+
+    resetGame();
+});
 
 
-/* =================
-   BOMB
-================= */
+nameInput.addEventListener("keydown",e=>{
 
-if(food.type==="bomb"){
+    if(e.key==="Enter"){
 
-bombSound();
+        e.preventDefault();
 
-score=Math.max(
-0,
-score-30
-);
+        nameOk.click();
+    }
+});
 
-scoreEl.textContent=score;
 
-snake.maxCells=
-Math.max(
-4,
-snake.maxCells-3
-);
+/* =========================
+   TOP PLAYERS
+========================= */
 
-while(
-snake.cells.length>
-snake.maxCells
-){
+topInline.addEventListener("click",()=>{
 
-snake.cells.pop();
+    showPlayers();
+});
 
-}
 
-document.body.classList.remove(
-"shake"
-);
+closePlayers.addEventListener("click",()=>{
+
+    playersOverlay.classList.add("hidden");
+});
+
+
+playersOverlay.addEventListener("click",e=>{
+
+    if(e.target===playersOverlay){
+
+        playersOverlay.classList.add("hidden");
+    }
+});
+
+
+/* =========================
+   INITIAL DISPLAY
+========================= */
+
+bestEl.textContent=best;
+
+draw();
+
+requestAnimationFrame(gameLoop);
+
+
+/* =========================
+   OPEN NAME INPUT
+========================= */
+
+setTimeout(()=>{
+
+    nameInput.focus();
+
+},300);
+
+</script>
+
+</body>
+</html>
