@@ -26,7 +26,9 @@ body{
     align-items:center;
 }
 
-body.shake{animation:shake .35s}
+body.shake{
+    animation:shake .35s;
+}
 
 @keyframes shake{
     0%,100%{transform:translate(0,0)}
@@ -63,14 +65,16 @@ body.shake{animation:shake .35s}
 }
 
 .infoBox{
-    font-size:19px;
+    font-size:18px;
     font-weight:900;
     line-height:1.1;
     color:#00f2fe;
     text-shadow:0 0 9px #00f2fe;
 }
 
-.infoBox span{color:#fff}
+.infoBox span{
+    color:#fff;
+}
 
 #playerName{
     color:#ff66cc!important;
@@ -93,24 +97,6 @@ body.shake{animation:shake .35s}
 #topInline{
     color:#ffff00;
     cursor:pointer;
-    text-shadow:0 0 8px #ffff00;
-}
-
-#accountInfo{
-    margin:5px 0;
-    font-size:13px;
-    color:#aaa;
-}
-
-#logoutBtn{
-    display:none;
-    margin-left:5px;
-    padding:3px 8px;
-    border:0;
-    border-radius:5px;
-    background:#ff007f;
-    color:#fff;
-    font-weight:bold;
 }
 
 canvas{
@@ -145,6 +131,7 @@ canvas{
     font-weight:900;
     cursor:pointer;
     user-select:none;
+    -webkit-user-select:none;
     touch-action:none;
 }
 
@@ -171,6 +158,18 @@ canvas{
     box-shadow:0 0 12px #ff8c00,0 0 25px #ff8c00;
 }
 
+#loginBtn{
+    background:#fff;
+    color:#111;
+    box-shadow:0 0 13px #fff;
+}
+
+#logoutBtn{
+    background:#ff007f;
+    color:#fff;
+    display:none;
+}
+
 .controls{
     margin-top:10px;
     display:grid;
@@ -195,6 +194,7 @@ canvas{
     box-shadow:0 4px #b30059,0 0 10px rgba(255,0,127,.5);
     cursor:pointer;
     touch-action:none;
+    user-select:none;
 }
 
 .dir:active{
@@ -221,25 +221,35 @@ canvas{
     text-shadow:0 0 8px #fff,0 0 20px #ff007f;
 }
 
-.messageShow{animation:bonusMessage 1.1s forwards}
+.messageShow{
+    animation:bonusMessage 1.1s forwards;
+}
 
 @keyframes bonusMessage{
-    0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}
+    0%{
+        opacity:0;
+        transform:translate(-50%,-30%) scale(.6);
+    }
     20%,80%{opacity:1}
-    100%{opacity:0;transform:translate(-50%,-120%) scale(1.2)}
+    100%{
+        opacity:0;
+        transform:translate(-50%,-120%) scale(1.2);
+    }
 }
 
 .overlay{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,.88);
+    background:rgba(0,0,0,.86);
     display:flex;
     justify-content:center;
     align-items:center;
     z-index:50;
 }
 
-.hidden{display:none!important}
+.hidden{
+    display:none!important;
+}
 
 .modal{
     width:90%;
@@ -286,16 +296,24 @@ canvas{
 
 .googleBtn{
     width:100%;
-    margin-top:10px;
     background:#fff!important;
-    color:#222!important;
-    box-shadow:0 0 12px #fff!important;
+    color:#111!important;
+    margin-top:8px;
 }
 
 .closeBtn{
     background:#ff007f!important;
     color:#fff!important;
-    box-shadow:0 0 12px #ff007f!important;
+}
+
+.userInfo{
+    margin:8px 0;
+    font-size:13px;
+    color:#aaa;
+}
+
+.userInfo strong{
+    color:#00f2fe;
 }
 
 #playersList{
@@ -331,10 +349,9 @@ canvas{
 }
 
 #loginStatus{
-    margin-top:10px;
-    min-height:18px;
-    color:#00f2fe;
-    font-size:14px;
+    margin-top:5px;
+    font-size:13px;
+    color:#aaa;
 }
 </style>
 </head>
@@ -364,11 +381,6 @@ BEST<br>
 
 </div>
 
-<div id="accountInfo">
-<span id="accountText">Δεν έχεις συνδεθεί</span>
-<button id="logoutBtn">LOGOUT</button>
-</div>
-
 <div id="extraInfo">
 LEVEL <span id="level">1</span>
 &nbsp;|&nbsp;
@@ -388,8 +400,12 @@ LEVEL <span id="level">1</span>
 <button class="mainBtn" id="startBtn">START</button>
 <button class="mainBtn" id="reloadBtn">RELOAD</button>
 <button class="mainBtn" id="turboBtn">TURBO OFF</button>
+<button class="mainBtn" id="loginBtn">🔵 GOOGLE LOGIN</button>
+<button class="mainBtn" id="logoutBtn">LOGOUT</button>
 
 </div>
+
+<div id="loginStatus"></div>
 
 <div class="controls">
 
@@ -403,28 +419,30 @@ LEVEL <span id="level">1</span>
 </div>
 
 
-<!-- LOGIN -->
+<!-- NAME -->
 
-<div class="overlay" id="loginOverlay">
+<div class="overlay" id="nameOverlay">
 
 <div class="modal">
 
 <h2>NEON SNAKE</h2>
 
-<p>Συνδέσου για να αποθηκεύονται τα σκορ σου.</p>
+<p>Βάλε το όνομά σου</p>
 
-<button class="googleBtn" id="googleLogin">
-🔵 ΣΥΝΔΕΣΗ ΜΕ GOOGLE
-</button>
+<input
+id="nameInput"
+maxlength="15"
+placeholder="NAME"
+autocomplete="off">
 
-<div id="loginStatus"></div>
+<button id="nameOk">OK</button>
 
 </div>
 
 </div>
 
 
-<!-- TOP PLAYERS -->
+<!-- PLAYERS -->
 
 <div class="overlay hidden" id="playersOverlay">
 
@@ -448,9 +466,9 @@ CLOSE
 "use strict";
 
 
-/* ==========================================
+/* =====================================================
    SUPABASE
-========================================== */
+===================================================== */
 
 const SUPABASE_URL =
 "https://gbutygkmjavrrdqfxpbp.supabase.co";
@@ -459,17 +477,15 @@ const SUPABASE_ANON_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdidXR5Z2ttamF2cnJkcWZ4cGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNjU4NDEsImV4cCI6MjEwMjc0MTg0MX0.nVcXvq9z4HU77XyM1uiWJVmcW1AgK9Zk7iALB2gjOAs";
 
 const supabaseClient =
-supabase.createClient(
+window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
 );
 
-let currentUser=null;
 
-
-/* ==========================================
+/* =====================================================
    ELEMENTS
-========================================== */
+===================================================== */
 
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
@@ -483,12 +499,13 @@ const startBtn=document.getElementById("startBtn");
 const reloadBtn=document.getElementById("reloadBtn");
 const turboBtn=document.getElementById("turboBtn");
 
-const loginOverlay=document.getElementById("loginOverlay");
-const googleLogin=document.getElementById("googleLogin");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
 const loginStatus=document.getElementById("loginStatus");
 
-const accountText=document.getElementById("accountText");
-const logoutBtn=document.getElementById("logoutBtn");
+const nameOverlay=document.getElementById("nameOverlay");
+const nameInput=document.getElementById("nameInput");
+const nameOk=document.getElementById("nameOk");
 
 const playersOverlay=document.getElementById("playersOverlay");
 const playersList=document.getElementById("playersList");
@@ -498,15 +515,160 @@ const closePlayers=document.getElementById("closePlayers");
 const message=document.getElementById("message");
 
 
-/* ==========================================
+/* =====================================================
+   USER
+===================================================== */
+
+let currentUser=null;
+let playerName="";
+
+
+async function getUser(){
+
+    const result =
+        await supabaseClient.auth.getUser();
+
+    currentUser=result.data.user || null;
+
+    updateLoginUI();
+
+    return currentUser;
+}
+
+
+function updateLoginUI(){
+
+    if(currentUser){
+
+        const metadata=currentUser.user_metadata || {};
+
+        const googleName =
+            metadata.full_name ||
+            metadata.name ||
+            currentUser.email ||
+            "PLAYER";
+
+        playerName=googleName.substring(0,15);
+
+        playerNameEl.textContent=playerName;
+
+        loginBtn.style.display="none";
+        logoutBtn.style.display="inline-block";
+
+        loginStatus.innerHTML=
+            "Συνδεδεμένος ως <strong>"+
+            escapeHtml(currentUser.email || playerName)+
+            "</strong>";
+
+        nameOverlay.classList.add("hidden");
+
+    }else{
+
+        loginBtn.style.display="inline-block";
+        logoutBtn.style.display="none";
+
+        loginStatus.textContent="Δεν έχει γίνει σύνδεση";
+
+        if(!playerName){
+
+            playerNameEl.textContent="---";
+        }
+    }
+}
+
+
+/* =====================================================
+   GOOGLE LOGIN
+===================================================== */
+
+loginBtn.addEventListener("click",async()=>{
+
+    try{
+
+        initAudio();
+
+        loginStatus.textContent="Άνοιγμα Google...";
+
+        const {error}=await supabaseClient.auth.signInWithOAuth({
+
+            provider:"google",
+
+            options:{
+                redirectTo:"https://kwnthan.github.io/"
+            }
+
+        });
+
+        if(error){
+
+            console.error(error);
+
+            loginStatus.textContent=
+                "Σφάλμα Google Login: "+error.message;
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        loginStatus.textContent=
+            "Σφάλμα σύνδεσης.";
+    }
+
+});
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+logoutBtn.addEventListener("click",async()=>{
+
+    await supabaseClient.auth.signOut();
+
+    currentUser=null;
+    playerName="";
+
+    playerNameEl.textContent="---";
+
+    updateLoginUI();
+
+    showMessage("LOGOUT");
+});
+
+
+/* =====================================================
+   AUTH STATE
+===================================================== */
+
+supabaseClient.auth.onAuthStateChange(
+    async(event,session)=>{
+
+        currentUser=session?.user || null;
+
+        updateLoginUI();
+
+        if(event==="SIGNED_IN"){
+
+            showMessage("GOOGLE LOGIN ✓");
+
+            setTimeout(()=>{
+                resetGame();
+            },500);
+        }
+
+    }
+);
+
+
+/* =====================================================
    GAME SETTINGS
-========================================== */
+===================================================== */
 
 const grid=20;
 const cols=20;
 const rows=20;
 
-let playerName="";
 let score=0;
 
 let best=Number(
@@ -554,7 +716,12 @@ maxCells:4
 let foods=[];
 
 
+/* =====================================================
+   FOOD
+===================================================== */
+
 const foodTypes={
+
 apple:{color:"#ff007f",points:10},
 strawberry:{color:"#ff1744",points:25},
 cherry:{color:"#ff0033",points:35},
@@ -562,24 +729,29 @@ orange:{color:"#ff8c00",points:20},
 watermelon:{color:"#00ff66",points:30},
 grape:{color:"#9b30ff",points:50},
 bomb:{color:"#111",points:-30}
+
 };
 
 
-/* ==========================================
+/* =====================================================
    AUDIO
-========================================== */
+===================================================== */
 
 let audioCtx=null;
 
 function initAudio(){
 
     if(!audioCtx){
+
         audioCtx=
-        new(window.AudioContext||window.webkitAudioContext)();
+            new(window.AudioContext||
+            window.webkitAudioContext)();
     }
 
-    if(audioCtx.state==="suspended")
+    if(audioCtx.state==="suspended"){
+
         audioCtx.resume();
+    }
 }
 
 function beep(f,d,type="sine"){
@@ -606,7 +778,9 @@ function beep(f,d,type="sine"){
     gain.connect(audioCtx.destination);
 
     osc.start();
-    osc.stop(audioCtx.currentTime+d);
+    osc.stop(
+        audioCtx.currentTime+d
+    );
 }
 
 function eatSound(){
@@ -654,160 +828,9 @@ function gameOverSound(){
 }
 
 
-/* ==========================================
-   GOOGLE LOGIN
-========================================== */
-
-googleLogin.addEventListener("click",async()=>{
-
-    loginStatus.textContent="Σύνδεση με Google...";
-
-    const redirectTo=window.location.origin;
-
-    const {error}=await supabaseClient.auth.signInWithOAuth({
-
-        provider:"google",
-
-        options:{
-            redirectTo:redirectTo
-        }
-
-    });
-
-    if(error){
-
-        console.error(error);
-
-        loginStatus.textContent=
-            "Σφάλμα: "+error.message;
-    }
-});
-
-
-/* ==========================================
-   AUTH CHECK
-========================================== */
-
-async function checkUser(){
-
-    const {
-        data:{
-            session
-        }
-    }=await supabaseClient.auth.getSession();
-
-    if(session){
-
-        await setUser(session.user);
-
-    }else{
-
-        loginOverlay.classList.remove("hidden");
-    }
-}
-
-
-async function setUser(user){
-
-    currentUser=user;
-
-    const email=user.email||"";
-
-    let name=
-        user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        email.split("@")[0] ||
-        "PLAYER";
-
-    playerName=name.substring(0,15);
-
-    playerNameEl.textContent=playerName;
-
-    accountText.textContent=
-        "Google: "+email;
-
-    logoutBtn.style.display="inline-block";
-
-    loginOverlay.classList.add("hidden");
-
-    loadBest();
-
-    resetGame();
-}
-
-
-supabaseClient.auth.onAuthStateChange(
-    async(event,session)=>{
-
-        if(session){
-
-            await setUser(session.user);
-
-        }else{
-
-            currentUser=null;
-
-            loginOverlay.classList.remove("hidden");
-
-            logoutBtn.style.display="none";
-
-            accountText.textContent=
-                "Δεν έχεις συνδεθεί";
-        }
-    }
-);
-
-
-logoutBtn.addEventListener("click",async()=>{
-
-    await supabaseClient.auth.signOut();
-
-    gameStarted=false;
-    gameOver=false;
-
-});
-
-
-/* ==========================================
-   BEST SCORE
-========================================== */
-
-function loadBest(){
-
-    if(!currentUser)return;
-
-    best=Number(
-        localStorage.getItem(
-            "snake_best_"+currentUser.id
-        )||0
-    );
-
-    bestEl.textContent=best;
-}
-
-
-function updateBest(){
-
-    if(score>best){
-
-        best=score;
-
-        bestEl.textContent=best;
-
-        if(currentUser){
-
-            localStorage.setItem(
-                "snake_best_"+currentUser.id,
-                String(best)
-            );
-        }
-    }
-}
-
-
-/* ==========================================
-   FOOD
-========================================== */
+/* =====================================================
+   POSITION
+===================================================== */
 
 function randomPosition(){
 
@@ -840,7 +863,7 @@ function createFood(type){
     );
 
     foods.push({
-        type,
+        type:type,
         x:p.x,
         y:p.y
     });
@@ -859,14 +882,19 @@ function specialFood(){
 
     if(r<.18)
         createFood("strawberry");
+
     else if(r<.33)
         createFood("cherry");
+
     else if(r<.47)
         createFood("orange");
+
     else if(r<.60)
         createFood("watermelon");
+
     else if(r<.72)
         createFood("grape");
+
     else if(
         snake.cells.length>=10 &&
         r<.84
@@ -875,9 +903,9 @@ function specialFood(){
 }
 
 
-/* ==========================================
-   RESET
-========================================== */
+/* =====================================================
+   RESET GAME
+===================================================== */
 
 function resetGame(){
 
@@ -925,9 +953,9 @@ function resetGame(){
 }
 
 
-/* ==========================================
+/* =====================================================
    DRAW FOOD
-========================================== */
+===================================================== */
 
 function drawFood(food){
 
@@ -943,6 +971,7 @@ function drawFood(food){
         ctx.fillStyle=f.color;
 
         ctx.beginPath();
+
         ctx.arc(
             food.x+10,
             food.y+11,
@@ -950,9 +979,11 @@ function drawFood(food){
             0,
             Math.PI*2
         );
+
         ctx.fill();
 
         ctx.fillStyle="#35ff35";
+
         ctx.fillRect(
             food.x+10,
             food.y+1,
@@ -960,7 +991,9 @@ function drawFood(food){
             7
         );
 
-    }else if(food.type==="strawberry"){
+    }
+
+    else if(food.type==="strawberry"){
 
         ctx.fillStyle=f.color;
 
@@ -982,17 +1015,20 @@ function drawFood(food){
         );
 
         ctx.closePath();
+
         ctx.fill();
 
         ctx.fillStyle="#00ff66";
+
         ctx.fillRect(
             food.x+6,
             food.y,
             8,
             5
         );
+    }
 
-    }else if(food.type==="cherry"){
+    else if(food.type==="cherry"){
 
         ctx.fillStyle=f.color;
 
@@ -1037,8 +1073,9 @@ function drawFood(food){
         );
 
         ctx.stroke();
+    }
 
-    }else if(food.type==="orange"){
+    else if(food.type==="orange"){
 
         ctx.fillStyle=f.color;
 
@@ -1053,8 +1090,9 @@ function drawFood(food){
         );
 
         ctx.fill();
+    }
 
-    }else if(food.type==="watermelon"){
+    else if(food.type==="watermelon"){
 
         ctx.fillStyle="#00cc55";
 
@@ -1095,19 +1133,16 @@ function drawFood(food){
                 2
             );
         }
+    }
 
-    }else if(food.type==="grape"){
+    else if(food.type==="grape"){
 
         ctx.fillStyle=f.color;
 
         [
-            [5,5],
-            [12,5],
-            [2,11],
-            [9,11],
-            [16,11],
-            [6,17],
-            [13,17]
+            [5,5],[12,5],
+            [2,11],[9,11],[16,11],
+            [6,17],[13,17]
         ].forEach(p=>{
 
             ctx.beginPath();
@@ -1122,8 +1157,9 @@ function drawFood(food){
 
             ctx.fill();
         });
+    }
 
-    }else if(food.type==="bomb"){
+    else if(food.type==="bomb"){
 
         ctx.fillStyle="#111";
 
@@ -1141,6 +1177,7 @@ function drawFood(food){
 
         ctx.strokeStyle="#ff007f";
         ctx.lineWidth=2;
+
         ctx.stroke();
 
         ctx.fillStyle="#ff8c00";
@@ -1162,13 +1199,14 @@ function drawFood(food){
 }
 
 
-/* ==========================================
+/* =====================================================
    DRAW SNAKE
-========================================== */
+===================================================== */
 
 function drawSnake(){
 
-    snake.cells.forEach((cell,index)=>{
+    snake.cells.forEach(
+        (cell,index)=>{
 
         ctx.save();
 
@@ -1192,6 +1230,7 @@ function drawSnake(){
         if(index===0){
 
             ctx.shadowBlur=0;
+
             ctx.fillStyle="#000";
 
             let eye1;
@@ -1268,13 +1307,14 @@ function drawSnake(){
         }
 
         ctx.restore();
+
     });
 }
 
 
-/* ==========================================
+/* =====================================================
    DRAW
-========================================== */
+===================================================== */
 
 function draw(){
 
@@ -1298,8 +1338,10 @@ function draw(){
     ){
 
         ctx.beginPath();
+
         ctx.moveTo(x,0);
         ctx.lineTo(x,canvas.height);
+
         ctx.stroke();
     }
 
@@ -1310,8 +1352,10 @@ function draw(){
     ){
 
         ctx.beginPath();
+
         ctx.moveTo(0,y);
         ctx.lineTo(canvas.width,y);
+
         ctx.stroke();
     }
 
@@ -1321,9 +1365,9 @@ function draw(){
 }
 
 
-/* ==========================================
+/* =====================================================
    SCORE
-========================================== */
+===================================================== */
 
 function addScore(points){
 
@@ -1334,13 +1378,63 @@ function addScore(points){
 
     scoreEl.textContent=score;
 
-    updateBest();
+    if(score>best){
+
+        best=score;
+
+        bestEl.textContent=best;
+
+        localStorage.setItem(
+            "snake_best",
+            String(best)
+        );
+    }
 }
 
 
-/* ==========================================
+/* =====================================================
+   SAVE SCORE TO SUPABASE
+===================================================== */
+
+async function saveScoreToSupabase(){
+
+    if(!currentUser)
+        return;
+
+    try{
+
+        const {error}=await supabaseClient
+            .from("scores")
+            .insert({
+
+                user_id:currentUser.id,
+
+                name:playerName,
+
+                score:score,
+
+                level:level
+
+            });
+
+        if(error){
+
+            console.error(
+                "Supabase score error:",
+                error
+            );
+        }
+
+    }catch(error){
+
+        console.error(error);
+    }
+}
+
+
+/* =====================================================
    LEVEL
-========================================== */
+===================================================== */
 
 function updateLevel(){
 
@@ -1381,9 +1475,9 @@ function updateLevel(){
 }
 
 
-/* ==========================================
+/* =====================================================
    MESSAGE
-========================================== */
+===================================================== */
 
 function showMessage(text){
 
@@ -1401,147 +1495,86 @@ function showMessage(text){
 }
 
 
-/* ==========================================
-   SAVE SCORE TO SUPABASE
-========================================== */
-
-async function saveScore(){
-
-    if(!currentUser)
-        return;
-
-    if(score<=0)
-        return;
-
-    try{
-
-        const {error}=await supabaseClient
-            .from("scores")
-            .insert({
-
-                user_id:currentUser.id,
-
-                player_name:playerName,
-
-                score:score,
-
-                level:level
-
-            });
-
-        if(error){
-
-            console.error(
-                "Score save error:",
-                error
-            );
-        }
-
-    }catch(err){
-
-        console.error(err);
-    }
-}
-
-
-/* ==========================================
-   TOP PLAYERS FROM SUPABASE
-========================================== */
+/* =====================================================
+   TOP PLAYERS
+===================================================== */
 
 async function showPlayers(){
+
+    playersList.innerHTML=
+        "<p>Φόρτωση...</p>";
 
     playersOverlay.classList.remove(
         "hidden"
     );
 
-    playersList.innerHTML=
-        "<p>Φόρτωση...</p>";
+    try{
 
-    const {data,error}=
-        await supabaseClient
-        .from("scores")
-        .select(
-            "player_name,score,level"
-        )
-        .order(
-            "score",
-            {ascending:false}
-        )
-        .order(
-            "level",
-            {ascending:false}
-        )
-        .limit(20);
+        const {data,error}=
+            await supabaseClient
+                .from("scores")
+                .select("name,score,level")
+                .order("score",{ascending:false})
+                .limit(20);
 
-    if(error){
+        if(error)
+            throw error;
+
+        if(!data || data.length===0){
+
+            playersList.innerHTML=
+                "<p>Δεν υπάρχουν ακόμα scores.</p>";
+
+            return;
+        }
+
+        let html=`
+
+        <div class="playerHeader">
+            <div>#</div>
+            <div>NAME</div>
+            <div>SCORE</div>
+            <div>LEVEL</div>
+        </div>
+        `;
+
+        data.forEach((p,i)=>{
+
+            html+=`
+
+            <div class="playerRow">
+
+                <div>${i+1}</div>
+
+                <div>
+                    <strong>
+                    ${escapeHtml(p.name)}
+                    </strong>
+                </div>
+
+                <div>${p.score}</div>
+
+                <div>${p.level}</div>
+
+            </div>
+            `;
+        });
+
+        playersList.innerHTML=html;
+
+    }catch(error){
 
         console.error(error);
 
         playersList.innerHTML=
-            "<p>Σφάλμα φόρτωσης.</p>";
-
-        return;
+            "<p>Δεν μπορώ να φορτώσω τα scores.</p>";
     }
-
-    if(!data || data.length===0){
-
-        playersList.innerHTML=
-            "<p>Δεν υπάρχουν ακόμα σκορ.</p>";
-
-        return;
-    }
-
-    let html=`
-
-    <div class="playerHeader">
-        <div>#</div>
-        <div>NAME</div>
-        <div>SCORE</div>
-        <div>LEVEL</div>
-    </div>
-    `;
-
-    data.forEach((p,i)=>{
-
-        html+=`
-
-        <div class="playerRow">
-
-            <div>${i+1}</div>
-
-            <div>
-                <strong>
-                    ${escapeHtml(p.player_name)}
-                </strong>
-            </div>
-
-            <div>${p.score}</div>
-
-            <div>${p.level}</div>
-
-        </div>
-
-        `;
-    });
-
-    playersList.innerHTML=html;
 }
 
 
-function escapeHtml(text){
-
-    return String(text)
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-}
-
-
-/* ==========================================
+/* =====================================================
    GAME OVER
-========================================== */
+===================================================== */
 
 function drawGameOver(){
 
@@ -1586,8 +1619,7 @@ function drawGameOver(){
         canvas.height/2-55
     );
 
-    ctx.font=
-        "900 28px Segoe UI";
+    ctx.font="900 28px Segoe UI";
 
     ctx.fillStyle="#00f2fe";
 
@@ -1600,8 +1632,7 @@ function drawGameOver(){
         canvas.height/2+5
     );
 
-    ctx.font=
-        "900 24px Segoe UI";
+    ctx.font="900 24px Segoe UI";
 
     ctx.fillStyle="#ffff00";
 
@@ -1614,15 +1645,14 @@ function drawGameOver(){
         canvas.height/2+42
     );
 
-    ctx.font=
-        "900 20px Segoe UI";
+    ctx.font="900 20px Segoe UI";
 
     ctx.fillStyle="#ff66cc";
 
     ctx.shadowColor="#ff007f";
 
     ctx.fillText(
-        playerName,
+        playerName || "PLAYER",
         canvas.width/2,
         canvas.height/2+78
     );
@@ -1630,10 +1660,6 @@ function drawGameOver(){
     ctx.restore();
 }
 
-
-/* ==========================================
-   END GAME
-========================================== */
 
 async function endGame(){
 
@@ -1647,7 +1673,7 @@ async function endGame(){
 
     gameOverSound();
 
-    await saveScore();
+    await saveScoreToSupabase();
 
     startBtn.textContent="RESTART";
 
@@ -1655,15 +1681,15 @@ async function endGame(){
 }
 
 
-/* ==========================================
+/* =====================================================
    GAME STEP
-========================================== */
+===================================================== */
 
 function step(){
 
     if(
-        !gameStarted ||
-        paused ||
+        !gameStarted||
+        paused||
         gameOver
     )
         return;
@@ -1672,19 +1698,15 @@ function step(){
     snake.y+=snake.dy;
 
     if(snake.x<0)
-        snake.x=
-            canvas.width-grid;
-    else if(
-        snake.x>=canvas.width
-    )
+        snake.x=canvas.width-grid;
+
+    else if(snake.x>=canvas.width)
         snake.x=0;
 
     if(snake.y<0)
-        snake.y=
-            canvas.height-grid;
-    else if(
-        snake.y>=canvas.height
-    )
+        snake.y=canvas.height-grid;
+
+    else if(snake.y>=canvas.height)
         snake.y=0;
 
     snake.cells.unshift({
@@ -1739,14 +1761,12 @@ function step(){
 
                 bombSound();
 
-                score=
-                    Math.max(
-                        0,
-                        score-30
-                    );
+                score=Math.max(
+                    0,
+                    score-30
+                );
 
-                scoreEl.textContent=
-                    score;
+                scoreEl.textContent=score;
 
                 snake.maxCells=
                     Math.max(
@@ -1757,18 +1777,20 @@ function step(){
                 while(
                     snake.cells.length>
                     snake.maxCells
-                )
-                    snake.cells.pop();
+                ){
 
-                document.body.classList.remove(
-                    "shake"
-                );
+                    snake.cells.pop();
+                }
+
+                document.body
+                    .classList
+                    .remove("shake");
 
                 void document.body.offsetWidth;
 
-                document.body.classList.add(
-                    "shake"
-                );
+                document.body
+                    .classList
+                    .add("shake");
 
                 showMessage(
                     "💣 BOOM! -30"
@@ -1785,9 +1807,7 @@ function step(){
 
                 snake.maxCells++;
 
-                if(
-                    food.type==="apple"
-                ){
+                if(food.type==="apple"){
 
                     applesEaten++;
 
@@ -1802,14 +1822,17 @@ function step(){
                     bonusSound();
 
                     let text=
-                        food.type.toUpperCase();
+                        food.type
+                        .toUpperCase();
 
                     if(
                         food.type==="grape"
-                    )
+                    ){
+
                         text=
                             "🍇 ΜΕΓΑΛΩΣΕ! +"+
                             points;
+                    }
 
                     showMessage(text);
                 }
@@ -1839,16 +1862,20 @@ function step(){
                 if(
                     food.type==="apple" &&
                     applesEaten%5===0
-                )
+                ){
+
                     specialFood();
+                }
 
 
                 if(
                     !foods.some(
                         f=>f.type==="apple"
                     )
-                )
+                ){
+
                     createFood("apple");
+                }
             }
 
             break;
@@ -1857,16 +1884,16 @@ function step(){
 }
 
 
-/* ==========================================
+/* =====================================================
    GAME LOOP
-========================================== */
+===================================================== */
 
 function gameLoop(time){
 
     requestAnimationFrame(gameLoop);
 
     if(
-        !gameStarted ||
+        !gameStarted||
         paused
     ){
 
@@ -1895,9 +1922,9 @@ function gameLoop(time){
 }
 
 
-/* ==========================================
+/* =====================================================
    START
-========================================== */
+===================================================== */
 
 startBtn.addEventListener(
     "click",
@@ -1929,9 +1956,9 @@ startBtn.addEventListener(
 );
 
 
-/* ==========================================
+/* =====================================================
    RELOAD
-========================================== */
+===================================================== */
 
 reloadBtn.addEventListener(
     "click",
@@ -1941,9 +1968,9 @@ reloadBtn.addEventListener(
 );
 
 
-/* ==========================================
+/* =====================================================
    TURBO
-========================================== */
+===================================================== */
 
 turboBtn.addEventListener(
     "click",
@@ -1982,9 +2009,9 @@ turboBtn.addEventListener(
 );
 
 
-/* ==========================================
+/* =====================================================
    KEYBOARD
-========================================== */
+===================================================== */
 
 window.addEventListener(
     "keydown",
@@ -2005,12 +2032,14 @@ window.addEventListener(
         if(
             turboEnabled &&
             keys.includes(key)
-        )
+        ){
+
             turboActive=true;
+        }
 
         if(
-            !gameStarted ||
-            paused ||
+            !gameStarted||
+            paused||
             gameOver
         )
             return;
@@ -2068,17 +2097,17 @@ window.addEventListener(
 );
 
 
-/* ==========================================
+/* =====================================================
    TOUCH CONTROLS
-========================================== */
+===================================================== */
 
 function setDirection(direction){
 
     initAudio();
 
     if(
-        !gameStarted ||
-        paused ||
+        !gameStarted||
+        paused||
         gameOver
     )
         return;
@@ -2138,8 +2167,10 @@ function setupDirectionButton(
 
             timer=setInterval(
                 ()=>{
+
                     if(turboEnabled)
                         turboActive=true;
+
                 },
                 50
             );
@@ -2160,7 +2191,9 @@ function setupDirectionButton(
     button.addEventListener(
         "pointerdown",
         e=>{
+
             e.preventDefault();
+
             press();
         }
     );
@@ -2168,7 +2201,9 @@ function setupDirectionButton(
     button.addEventListener(
         "pointerup",
         e=>{
+
             e.preventDefault();
+
             release();
         }
     );
@@ -2206,50 +2241,161 @@ setupDirectionButton(
 );
 
 
-/* ==========================================
+/* =====================================================
+   NAME
+===================================================== */
+
+nameOk.addEventListener(
+    "click",
+    ()=>{
+
+        const value=
+            nameInput.value.trim();
+
+        if(!value){
+
+            nameInput.focus();
+
+            return;
+        }
+
+        playerName=
+            value.substring(0,15);
+
+        playerNameEl.textContent=
+            playerName;
+
+        nameOverlay.classList.add(
+            "hidden"
+        );
+
+        resetGame();
+    }
+);
+
+
+nameInput.addEventListener(
+    "keydown",
+    e=>{
+
+        if(e.key==="Enter"){
+
+            e.preventDefault();
+
+            nameOk.click();
+        }
+    }
+);
+
+
+/* =====================================================
    TOP PLAYERS
-========================================== */
+===================================================== */
 
 topInline.addEventListener(
     "click",
-    showPlayers
+    ()=>{
+
+        showPlayers();
+    }
 );
+
 
 closePlayers.addEventListener(
     "click",
     ()=>{
+
         playersOverlay.classList.add(
             "hidden"
         );
     }
 );
 
+
 playersOverlay.addEventListener(
     "click",
     e=>{
 
-        if(
-            e.target===
-            playersOverlay
-        )
+        if(e.target===playersOverlay){
+
             playersOverlay.classList.add(
                 "hidden"
             );
+        }
     }
 );
 
 
-/* ==========================================
-   INITIAL
-========================================== */
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHtml(text){
+
+    return String(text)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
 
 bestEl.textContent=best;
 
 draw();
 
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(
+    gameLoop
+);
 
-checkUser();
+
+/* =====================================================
+   CHECK SUPABASE SESSION
+===================================================== */
+
+(async()=>{
+
+    await getUser();
+
+    if(!currentUser){
+
+        nameInput.focus();
+
+    }else{
+
+        nameOverlay.classList.add(
+            "hidden"
+        );
+
+        resetGame();
+    }
+
+})();
 
 </script>
 
