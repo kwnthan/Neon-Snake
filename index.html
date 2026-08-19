@@ -1511,14 +1511,18 @@ async function showPlayers(){
     try{
 
         const {data,error}=
-            await supabaseClient
-                .from("scores")
-                .select("name,score,level")
-                .order("score",{ascending:false})
-                .limit(20);
+    await supabaseClient
+        .from("scores")
+        .select("name,score,level")
+        .order("score",{ascending:false})
+        .limit(20);
 
-        if(error)
-            throw error;
+if(error){
+    console.error("SCORES ERROR:", error);
+    playersList.innerHTML =
+        "<p>ERROR: " + escapeHtml(error.message) + "</p>";
+    return;
+}
 
         if(!data || data.length===0){
 
