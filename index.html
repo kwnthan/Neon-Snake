@@ -1075,6 +1075,59 @@ function showMessage(text){
 
 
 /* =========================
+   NAME
+========================= */
+
+function confirmName(){
+
+    const value = nameInput.value.trim();
+
+    if(!value){
+        nameInput.focus();
+        return;
+    }
+
+    playerName = value;
+    playerNameEl.textContent = playerName;
+
+    nameOverlay.classList.add("hidden");
+
+    initAudio();
+    resetGame();
+}
+
+
+/* CLICK - DESKTOP */
+
+nameOk.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    confirmName();
+});
+
+
+/* TOUCH - MOBILE */
+
+nameOk.addEventListener("touchend",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    confirmName();
+},{passive:false});
+
+
+/* ENTER */
+
+nameInput.addEventListener("keydown",(e)=>{
+
+    if(e.key === "Enter"){
+        e.preventDefault();
+        confirmName();
+    }
+
+});
+
+
+/* =========================
    TOP PLAYERS
 ========================= */
 
