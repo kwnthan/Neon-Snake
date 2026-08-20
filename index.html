@@ -1400,44 +1400,57 @@ async function saveScoreToSupabase(){
 
     try{
 
-        const {error}=await supabaseClient
+        const scoreData = {
+            name: playerName || "PLAYER",
+            score: Number(score) || 0,
+            level: Number(level) || 1,
+            user_id: currentUser ? currentUser.id : null
+        };
+
+        console.log("Αποθήκευση score:", scoreData);
+
+        const { data, error } = await supabaseClient
             .from("scores")
-            .insert({
-                user_id: currentUser ? currentUser.id : null,
-                name: playerName || "PLAYER",
-                score: score,
-                level: level
-            });
+            .insert([scoreData])
+            .select();
 
         if(error){
 
-            console.error("SAVE SCORE ERROR:", error);
+            console.error(
+                "SUPABASE SAVE SCORE ERROR:",
+                error
+            );
 
             alert(
-                "Σφάλμα αποθήκευσης score:\n" +
+                "Σφάλμα αποθήκευσης score:\n\n" +
                 error.message
             );
 
             return false;
         }
 
-        console.log("SCORE SAVED:", score);
+        console.log(
+            "Το score αποθηκεύτηκε:",
+            data
+        );
 
         return true;
 
     }catch(error){
 
-        console.error("SAVE SCORE EXCEPTION:", error);
+        console.error(
+            "SAVE SCORE EXCEPTION:",
+            error
+        );
 
         alert(
-            "Σφάλμα αποθήκευσης score:\n" +
+            "Σφάλμα αποθήκευσης score:\n\n" +
             error.message
         );
 
         return false;
     }
 }
-
 
 /* =====================================================
    LEVEL
