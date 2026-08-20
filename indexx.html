@@ -343,6 +343,14 @@ canvas{
     color:#fff!important;
     box-shadow:0 0 12px #ff007f!important;
 }
+    #nameOk{
+    position:relative;
+    z-index:1000;
+    pointer-events:auto;
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+}
 </style>
 </head>
 
@@ -1731,35 +1739,52 @@ setupDirectionButton("down","down");
    NAME
 ========================= */
 
-nameOk.addEventListener("click",()=>{
+function confirmName(){
 
-    const value=nameInput.value.trim();
+    const value = nameInput.value.trim();
 
     if(!value){
-
         nameInput.focus();
-
         return;
     }
 
-    playerName=value;
-
-    playerNameEl.textContent=playerName;
+    playerName = value;
+    playerNameEl.textContent = playerName;
 
     nameOverlay.classList.add("hidden");
 
+    initAudio();
     resetGame();
+}
+
+
+/* CLICK - DESKTOP */
+
+nameOk.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    confirmName();
 });
 
 
-nameInput.addEventListener("keydown",e=>{
+/* TOUCH - MOBILE */
 
-    if(e.key==="Enter"){
+nameOk.addEventListener("touchend",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    confirmName();
+},{passive:false});
 
+
+/* ENTER */
+
+nameInput.addEventListener("keydown",(e)=>{
+
+    if(e.key === "Enter"){
         e.preventDefault();
-
-        nameOk.click();
+        confirmName();
     }
+
 });
 
 
