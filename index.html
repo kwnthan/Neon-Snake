@@ -655,7 +655,7 @@ supabaseClient.auth.onAuthStateChange(
             setTimeout(()=>{
                 resetGame();
             },500);
-        }
+        }κ
 
     }
 );
@@ -1398,36 +1398,43 @@ function addScore(points){
 
 async function saveScoreToSupabase(){
 
-    if(!currentUser)
-        return;
-
     try{
 
         const {error}=await supabaseClient
             .from("scores")
             .insert({
-
-                user_id:currentUser.id,
-
-                name:playerName,
-
-                score:score,
-
-                level:level
-
+                user_id: currentUser ? currentUser.id : null,
+                name: playerName || "PLAYER",
+                score: score,
+                level: level
             });
 
         if(error){
 
-            console.error(
-                "Supabase score error:",
-                error
+            console.error("SAVE SCORE ERROR:", error);
+
+            alert(
+                "Σφάλμα αποθήκευσης score:\n" +
+                error.message
             );
+
+            return false;
         }
+
+        console.log("SCORE SAVED:", score);
+
+        return true;
 
     }catch(error){
 
-        console.error(error);
+        console.error("SAVE SCORE EXCEPTION:", error);
+
+        alert(
+            "Σφάλμα αποθήκευσης score:\n" +
+            error.message
+        );
+
+        return false;
     }
 }
 
