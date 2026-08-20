@@ -1501,28 +1501,30 @@ function showMessage(text){
 
 async function showPlayers(){
 
-    playersList.innerHTML=
-        "<p>Φόρτωση...</p>";
+    playersList.innerHTML="<p>Φόρτωση...</p>";
 
-    playersOverlay.classList.remove(
-        "hidden"
-    );
+    playersOverlay.classList.remove("hidden");
 
     try{
 
-        const {data,error}=
-    await supabaseClient
-        .from("scores")
-        .select("name,score,level")
-        .order("score",{ascending:false})
-        .limit(20);
+        const {data,error}=await supabaseClient
+            .from("scores")
+            .select("*")
+            .order("score",{ascending:false})
+            .limit(20);
 
-if(error){
-    console.error("SCORES ERROR:", error);
-    playersList.innerHTML =
-        "<p>ERROR: " + escapeHtml(error.message) + "</p>";
-    return;
-}
+        if(error){
+
+            console.error("SCORES ERROR:",error);
+
+            playersList.innerHTML=
+                "<p style='color:red'>"+
+                "ERROR: "+
+                escapeHtml(error.message)+
+                "</p>";
+
+            return;
+        }
 
         if(!data || data.length===0){
 
@@ -1533,45 +1535,37 @@ if(error){
         }
 
         let html=`
-
         <div class="playerHeader">
             <div>#</div>
             <div>NAME</div>
             <div>SCORE</div>
             <div>LEVEL</div>
-        </div>
-        `;
+        </div>`;
 
         data.forEach((p,i)=>{
 
             html+=`
-
             <div class="playerRow">
-
                 <div>${i+1}</div>
-
                 <div>
-                    <strong>
-                    ${escapeHtml(p.name)}
-                    </strong>
+                    <strong>${escapeHtml(p.name || "PLAYER")}</strong>
                 </div>
-
-                <div>${p.score}</div>
-
-                <div>${p.level}</div>
-
-            </div>
-            `;
+                <div>${p.score ?? 0}</div>
+                <div>${p.level ?? 1}</div>
+            </div>`;
         });
 
         playersList.innerHTML=html;
 
     }catch(error){
 
-        console.error(error);
+        console.error("SCORES EXCEPTION:",error);
 
         playersList.innerHTML=
-            "<p>Δεν μπορώ να φορτώσω τα scores.</p>";
+            "<p style='color:red'>"+
+            "ERROR: "+
+            escapeHtml(error.message || String(error))+
+            "</p>";
     }
 }
 
